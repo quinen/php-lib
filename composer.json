@@ -25,5 +25,10 @@
   "config": {
     "sort-packages": true,
     "optimize-autoloader": true
+  },
+  "extra": {
+    "branch-alias": {
+      "dev-master": "0.0.x-dev"
+    }
   }
 }
