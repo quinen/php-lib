@@ -1,23 +1,28 @@
 {
-    "name": "quinen/php-lib",
-    "description": "quinen's personnal library",
-    "type": "library",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Laurent Desmonceaux",
-            "email": "laurent@quinen.net"
-        }
-    ],
-    "require": {
-        "cakephp/utility": "3.*"
-    },
-    "autoload": {
-        "psr-4": {
-            "QuinenLib\\": "./src"
-        },
-        "files": [
-            "src/functions.php"
-        ]
+  "name": "quinen/php-lib",
+  "description": "quinen's personnal library",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Laurent Desmonceaux",
+      "email": "laurent@quinen.net"
     }
+  ],
+  "require": {
+    "cakephp/utility": "3.*",
+    "cakephp/collection": "3.*"
+  },
+  "autoload": {
+    "psr-4": {
+      "QuinenLib\\": "./src"
+    },
+    "files": [
+      "src/functions.php"
+    ]
+  },
+  "config": {
+    "sort-packages": true,
+    "optimize-autoloader": true
+  }
 }

@@ -38,6 +38,9 @@ class Template
         preg_match_all('#\{\{([\w\._]+)\}\}#', $string, $matches);
         $string = collection($matches)->transpose()->reduce(function ($reducer, $match) use ($data) {
             $value = Hash::get($data, $match[1]);
+            if (is_array($value)) {
+                $value = json_encode($value);
+            }
             $reducer = str_replace($match[0], $value, $reducer);
             return $reducer;
         }, $string);
