@@ -2,6 +2,7 @@
     "name": "quinen/php-lib",
     "description": "quinen's personnal library",
     "type": "library",
+    "license": "MIT",
     "authors": [
         {
             "name": "Laurent Desmonceaux",
