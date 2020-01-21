@@ -10,8 +10,9 @@
     }
   ],
   "require": {
-    "cakephp/utility": "3.*",
-    "cakephp/collection": "3.*"
+    "cakephp/collection": "3.*",
+    "cakephp/orm": "3.*",
+    "cakephp/utility": "3.*"
   },
   "autoload": {
     "psr-4": {
