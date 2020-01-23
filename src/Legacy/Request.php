@@ -13,12 +13,20 @@ use Cake\Utility\Hash;
 
 class Request
 {
-    public function getQuery($index = null)
+    public function getQuery($index = null, $default = null)
     {
         if ($index === null) {
             return $_GET;
         }
-        return Hash::get($_GET, $index);
+        return Hash::get($_GET, $index, $default);
+    }
+
+    public function getData($index = null, $default = null)
+    {
+        if ($index === null) {
+            return $_POST;
+        }
+        return Hash::get($_POST, $index, $default);
     }
 
 }
