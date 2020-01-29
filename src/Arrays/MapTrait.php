@@ -11,8 +11,6 @@ namespace QuinenLib\Arrays;
 use Cake\Core\Configure;
 use Cake\ORM\Entity;
 use Cake\Utility\Hash;
-use QuinenLib\Arrays\ContentOptionsTrait;
-use QuinenLib\Arrays\CurrentContextTrait;
 
 trait MapTrait
 {
@@ -261,6 +259,12 @@ trait MapTrait
             }, $field);
         }
 
+        if (Configure::read('debug')) {
+            if (!(is_array($data) || $data instanceof \ArrayAccess)) {
+                debug([$field, $data]);
+                return null;
+            }
+        }
         return Hash::get($data, $field);
     }
 

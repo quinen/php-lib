@@ -48,4 +48,13 @@ class Tools
         return implode($glue, $jsonExploded);
 
     }
+
+    public static function humanFileSize($bytes, $decimals = 1)
+    {
+        $factor = floor((strlen($bytes) - 1) / 3);
+        if ($factor > 0) {
+            $sz = 'kMGTP';
+        }
+        return sprintf("%.{$decimals}f", $bytes / (1024 ** $factor)) . ' ' . @$sz[$factor - 1] . 'o';
+    }
 }
