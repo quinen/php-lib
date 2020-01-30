@@ -259,6 +259,12 @@ trait MapTrait
             }, $field);
         }
 
+        if (Configure::read('debug')) {
+            if (!(is_array($data) || $data instanceof \ArrayAccess)) {
+                debug([$field, $data]);
+                return null;
+            }
+        }
         return Hash::get($data, $field);
     }
 
