@@ -11,8 +11,6 @@ namespace QuinenLib\Arrays;
 use Cake\Core\Configure;
 use Cake\ORM\Entity;
 use Cake\Utility\Hash;
-use QuinenLib\Arrays\ContentOptionsTrait;
-use QuinenLib\Arrays\CurrentContextTrait;
 
 trait MapTrait
 {
@@ -194,7 +192,7 @@ trait MapTrait
                 $lineOptions = $lineOptions($line);
             }
             return [$lineTransformed, $lineOptions];
-        })->toArray();
+        });
     }
 
     protected function transformMapsWithLine($maps, $row)
