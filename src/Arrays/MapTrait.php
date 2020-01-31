@@ -219,17 +219,25 @@ trait MapTrait
             }
 
             $wasArray = is_array($value);
+
             if ($wasArray) {
                 $nbValue = count($value);
             }
 
             // format value if necessary
             $valueFormatted = $this->getMapValueFormatted($value, $map['format']);
-            //debug([$field, $value, $wasArray, $valueFormatted]);
+
+            /*
+            if($field == ['date','dateValeur']){
+                debug(compact(['field','wasArray','nbValue','valueFormatted']));
+            }
+            */
+
             // fieldOptions returned
             if (
+                // personnalisation du style
                 (is_array($valueFormatted) && !$wasArray) ||
-                ($wasArray && is_array($valueFormatted) && $nbValue !== count($valueFormatted))
+                ($wasArray && is_array($valueFormatted) && count($valueFormatted)==2 && is_array($valueFormatted[1]))
             ) {
                 list($valueFormatted, $fieldOptions) = $valueFormatted;
             }
