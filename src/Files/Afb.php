@@ -15,6 +15,7 @@ use QuinenLib\Utility\Strings;
 class Afb
 {
     const ENREGISTREMENT_NOUVEAU_SOLDE = '07';
+    const MOUVEMENT_LIBELLE_LENGTH = 31;
 
     private static $enregistrementTypes = [
         '01' => "Ancien solde",
@@ -57,7 +58,7 @@ class Afb
             'date' => 6,
             'codeMotifRejet' => 2,
             'dateValeur' => 6,
-            'libelle' => 31,
+            'libelle' => self::MOUVEMENT_LIBELLE_LENGTH,
             'zoneReservee2n' => 2,
             'numeroEcriture' => 7,
             'indiceExoneration' => 1,
