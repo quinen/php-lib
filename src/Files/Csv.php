@@ -36,16 +36,16 @@ class Csv
     {
         $options += [
             'delimiter' => ',',
-            'enclosure' => '""',
+            'enclosure' => '"',
             'escapeChar' => "\\",
             'isHeader' => true
         ];
         $f = fopen('php://memory', 'rb+');
-        collection($data)->each(function ($item, $index) use ($f, $options) {
 
-            $fputcsv = function ($data) use ($f, $options) {
-                return fputcsv($f, $data, $options['delimiter'], $options['enclosure'], $options['escapeChar']);
-            };
+        $fputcsv = function ($data) use ($f, $options) {
+            return fputcsv($f, $data, $options['delimiter'], $options['enclosure'], $options['escapeChar']);
+        };
+        collection($data)->each(function ($item, $index) use ($f, $options, $fputcsv) {
 
             /** @var Entity $item * */
             if ($item instanceof Entity) {
