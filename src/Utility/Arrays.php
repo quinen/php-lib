@@ -8,6 +8,8 @@
 
 namespace QuinenLib\Utility;
 
+use Cake\ORM\Query;
+use Cake\Utility\Hash;
 
 class Arrays
 {
@@ -25,5 +27,20 @@ class Arrays
             }
             return true;
         })->toArray();
+    }
+
+    public static function copyFrom($array, $maps)
+    {
+
+        if ($array instanceof Query) {
+            $array = $array->toArray();
+        }
+
+        return collection($maps)->reduce(function ($reducer, $to, $from) use ($array) {
+            if (is_integer($from)) {
+                $from = $to;
+            }
+            return Hash::insert($reducer, $to, Hash::get($array, $from));
+        }, []);
     }
 }
