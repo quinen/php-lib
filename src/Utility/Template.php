@@ -23,7 +23,7 @@ class Template
         if (is_scalar($template)) {
             return self::templateString($template, $data);
         } else {
-            if (is_array($template)) {
+            if (is_array($template) || $template instanceof \Traversable) {
                 return collection($template)->map(function ($oneTemplate) use ($data) {
                     return self::templateArray($oneTemplate, $data);
                 })->toArray();
