@@ -14,11 +14,16 @@ use QuinenLib\Utility\Strings;
 
 class Afb
 {
+    // types d'enregistrement
+    const ENREGISTREMENT_MOUVEMENT = '04';
     const ENREGISTREMENT_NOUVEAU_SOLDE = '07';
+
+    // longueurs de champ
+    const MOUVEMENT_LIBELLE_LENGTH = 31;
 
     private static $enregistrementTypes = [
         '01' => "Ancien solde",
-        '04' => 'Mouvement',
+        self::ENREGISTREMENT_MOUVEMENT => 'Mouvement',
         self::ENREGISTREMENT_NOUVEAU_SOLDE => 'Nouveau solde'
     ];
 
@@ -44,7 +49,7 @@ class Afb
             'montant' => 14,
             'zoneReservee1m' => 16
         ],
-        '04' => [
+        self::ENREGISTREMENT_MOUVEMENT => [
             'codeEnregistrement' => 2,
             'codeBanque' => 5,
             'codeOperationInterne' => 4,
@@ -57,7 +62,7 @@ class Afb
             'date' => 6,
             'codeMotifRejet' => 2,
             'dateValeur' => 6,
-            'libelle' => 31,
+            'libelle' => self::MOUVEMENT_LIBELLE_LENGTH,
             'zoneReservee2n' => 2,
             'numeroEcriture' => 7,
             'indiceExoneration' => 1,
@@ -65,7 +70,7 @@ class Afb
             'montant' => 14,
             'zoneReference' => 16
         ],
-        '07' => [
+        self::ENREGISTREMENT_NOUVEAU_SOLDE => [
             'codeEnregistrement' => 2,
             'codeBanque' => 5,
             'zoneReservee3c' => 4,
