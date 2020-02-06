@@ -223,21 +223,19 @@ trait MapTrait
             if ($wasArray) {
                 $nbValue = count($value);
             }
+            /*
+            if ($value === 'toto@titi') {
+                debug([$value, $map['format']]);
+            }*/
 
             // format value if necessary
             $valueFormatted = $this->getMapValueFormatted($value, $map['format']);
-
-            /*
-            if($field == ['date','dateValeur']){
-                debug(compact(['field','wasArray','nbValue','valueFormatted']));
-            }
-            */
 
             // fieldOptions returned
             if (
                 // personnalisation du style
                 (is_array($valueFormatted) && !$wasArray) ||
-                ($wasArray && is_array($valueFormatted) && count($valueFormatted)==2 && is_array($valueFormatted[1]))
+                ($wasArray && is_array($valueFormatted) && count($valueFormatted) == 2 && is_array($valueFormatted[1]))
             ) {
                 list($valueFormatted, $fieldOptions) = $valueFormatted;
             }
@@ -302,6 +300,8 @@ trait MapTrait
                     /* @var array $format */
                 }
             }
+
+            // format : array with all the parameters
 
             array_unshift($format, $value);
 

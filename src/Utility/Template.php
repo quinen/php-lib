@@ -36,14 +36,21 @@ class Template
     public static function templateString($string, $data)
     {
         preg_match_all('#\{\{([\w\._]+)\}\}#', $string, $matches);
-        $string = collection($matches)->transpose()->reduce(function ($reducer, $match) use ($data) {
+        $newString = collection($matches)->transpose()->reduce(function ($reducer, $match) use ($string, $data) {
             $value = Hash::get($data, $match[1]);
-            if (is_array($value)) {
+
+            if ($string === $match[0]) {
+                return $value;
+            }
+
+            if (!is_scalar($value)) {
                 $value = json_encode($value);
             }
+
             $reducer = str_replace($match[0], $value, $reducer);
+
             return $reducer;
         }, $string);
-        return $string;
+        return $newString;
     }
 }
