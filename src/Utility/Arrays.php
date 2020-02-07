@@ -43,4 +43,11 @@ class Arrays
             return Hash::insert($reducer, $to, Hash::get($array, $from));
         }, []);
     }
+
+    public static function startsWith($array, $startString)
+    {
+        return collection($array)->some(function ($e) use ($startString) {
+            return Strings::startsWith($e, $startString);
+        });
+    }
 }
