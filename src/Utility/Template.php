@@ -39,11 +39,12 @@ class Template
         $newString = collection($matches)->transpose()->reduce(function ($reducer, $match) use ($string, $data) {
             $value = Hash::get($data, $match[1]);
 
+            // si le template ne contient rien d'autre que la veleur
             if ($string === $match[0]) {
                 return $value;
             }
 
-            if (!is_scalar($value)) {
+            if (!is_scalar($value) && $value !== null) {
                 $value = json_encode($value);
             }
 
