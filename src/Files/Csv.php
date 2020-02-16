@@ -13,6 +13,12 @@ class Csv
 
     use MapTrait;
 
+    /**
+     * @param $fileString
+     * @param array $options
+     * @return array
+     * @deprecated use filenameToArray, it's faster !!!
+     */
     public static function fileToArray($fileString, $options = [])
     {
         $options += [
