@@ -2,7 +2,11 @@
 
 namespace QuinenLib;
 
+use Bramus\Ansi\Ansi;
+use Bramus\Ansi\ControlSequences\EscapeSequences\Enums\SGR;
 use QuinenLib\Html\Tag;
+use QuinenLib\Utility\Strings;
+
 
 class Tools
 {
@@ -14,13 +18,33 @@ class Tools
     {
         $dbbt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 2);
         $traces = array_map(function ($t) {
-            $fileShort = substr(strrchr($t['file'], '/'), 1);
-            $classTypeFunction = $t['class'] . $t['type'] . $t['function'];
-
+            $fileShort = substr(Strings::strrchr($t['file'], '/', 1), 1);
+            $classTypeFunction = \template('{{class}}{{type}}{{function}}', $t);
             return $fileShort . '.' . $t['line'] . ':' . $classTypeFunction;
         }, $dbbt);
         $trace = implode(' | ', $traces);
-        echo new Tag('pre', new Tag('b', $trace) . PHP_EOL . var_export($var, true));
+
+        if (PHP_SAPI === 'cli') {
+            (new Ansi())
+                ->color([SGR::COLOR_BG_YELLOW, SGR::COLOR_FG_BLACK])
+                ->text($trace)
+                ->nostyle()->lf()->cr()
+                ->color([SGR::COLOR_BG_BLACK, SGR::COLOR_FG_YELLOW])
+                ->text(var_export($var, true))
+                ->nostyle()->lf()->cr()->bell();
+        } else {
+            echo new Tag(
+                'pre',
+                new Tag(
+                    'div',
+                    $trace,
+                    ['style' => 'background-color:#FF0;color:#000;']
+                ) . var_export($var, true),
+                [
+                    'style' => 'background-color:#EEE;border:1px solid #DDD;border-radius:0em;padding:0em;'
+                ]
+            );
+        }
     }
 
     /**

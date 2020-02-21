@@ -36,7 +36,7 @@ class Template
     public static function templateString($string, $data)
     {
         preg_match_all('#\{\{([\w\._]+)\}\}#', $string, $matches);
-        $newString = collection($matches)->transpose()->reduce(function ($reducer, $match) use ($string, $data) {
+        $newString = \collection($matches)->transpose()->reduce(function ($reducer, $match) use ($string, $data) {
             $value = Hash::get($data, $match[1]);
 
             // si le template ne contient rien d'autre que la veleur

@@ -10,6 +10,7 @@
     }
   ],
   "require": {
+    "bramus/ansi-php": "^3.0",
     "cakephp/collection": "3.*",
     "cakephp/orm": "3.*",
     "cakephp/utility": "3.*"
