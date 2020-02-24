@@ -14,14 +14,16 @@ trait Singleton
     /**
      * @return $this
      */
-    public static function getInstance()
+    final public static function getInstance()
     {
-        $staticClass = static::class;
-
-        if (!isset(static::$_instance[$staticClass])) {
-            static::$_instance[$staticClass] = new $staticClass();
+        $staticClass = self::class;
+        if (!isset(self::$_instance[$staticClass])) {
+            self::$_instance[$staticClass] = new $staticClass();
         }
+        return self::$_instance[$staticClass];
+    }
 
-        return static::$_instance[$staticClass];
+    final protected function __clone()
+    {
     }
 }

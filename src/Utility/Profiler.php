@@ -13,26 +13,61 @@ namespace QuinenLib\Utility;
  * */
 
 use Cake\Utility\Hash;
+use QuinenLib\Legacy\Singleton;
 use QuinenLib\Tools;
 
 class Profiler
 {
-    private static $instance;
-    protected $bench = [];
+    use Singleton;
 
-    public static function all()
+    const START = '_start';
+    const END = '_end';
+
+    protected $bench = [];
+    protected $keyLengthMax = 0;
+
+    protected function __construct()
     {
-        return self::getInstance()->read();
+        $this->write(self::START, false);
     }
+
+    protected function write($key)
+    {
+        if (($strlenKey = \strlen($key)) && $this->keyLengthMax < $strlenKey) {
+            $this->keyLengthMax = $strlenKey;
+        }
+
+        $keyData = [
+            'key' => $key,
+            'time' => microtime(true),
+            'memory' => memory_get_usage(),
+        ];
+
+        if ($key === self::START) {
+            $keyData['constants'] = get_defined_constants();
+        } else {
+            $keyData['constants'] = array_diff_key(get_defined_constants(), $this->{self::START}['constants']);
+        }
+
+
+        if (in_array($key, [self::START, self::END])) {
+            $this->{$key} = $keyData;
+        } else {
+            $this->bench[] = $keyData;
+        }
+
+    }
+
 
     /*
      * doit retourner une string avec le benching
      *
      * */
-    protected function read()
+
+    public static function all($options = [])
     {
-        self::bench('_end');
-        return $this->table();
+        self::bench(self::END);
+        return self::getInstance()->read($options);
     }
 
     public static function bench($key = null)
@@ -47,74 +82,113 @@ class Profiler
         self::getInstance()->write($key);
     }
 
-    protected function write($key)
+    protected function read($options = [])
     {
-        $this->bench[] = [
-            'key' => $key,
-            'time' => microtime(true),
-            'memory' => memory_get_usage()
+        return $this->table($options);
+    }
+
+    protected function table($options = [])
+    {
+        $options += [
+            'showConstants' => false
         ];
-    }
 
-    public static function getInstance()
-    {
-        if (!isset(self::$instance)) {
-            self::$instance = new self();
-            self::bench('_start');
-        }
-        return self::$instance;
-    }
-
-    protected function table()
-    {
         $maps = [
             [
-                'field' => 'key'
+                'field' => 'key',
+                'width' => $this->keyLengthMax,
+                'align' => STR_PAD_RIGHT
             ],
             [
-                'field' => 'time'
+                'field' => 'time',
+                'width' => 6,
+                'format' => function ($f) {
+                    return round(($f - $this->{self::START}['time']) * 1000) . ' ms';
+                },
+                'align' => STR_PAD_LEFT
             ],
             [
-                'field' => 'memory'
+                'field' => 'memory',
+                'width' => 8,
+                'format' => function ($f) {
+                    return Tools::humanFileSize($f - $this->{self::START}['memory']);
+                },
+                'align' => STR_PAD_LEFT
             ],
+            [
+                'field' => 'constants',
+                'format' => function ($f, $d) {
+                    if (in_array($d['key'], [self::START, self::END])) {
+                        return count($f);
+                    } else {
+                        return $f;
+                    }
+                },
+                'align' => STR_PAD_LEFT,
+                'hide' => !$options['showConstants']
+            ]
         ];
 
-        // calc values
-        $maps = collection($maps)->map(function ($map, $line) {
-            $map['calc'] = collection($this->bench)->reduce(function ($reducer, $bench) use ($map, $line) {
+        if (isset($this->{self::END})) {
+            $this->bench = array_merge($this->bench, [$this->{self::END}]);
+        } else {
+            self::bench('_printTable');
+        }
 
-                $fieldValue = $bench[$map['field']];
-                if (!isset($reducer['min']) || (isset($reducer['min']) && $reducer['min'] > $fieldValue)) {
-                    $reducer['min'] = $fieldValue;
-                }
-                $fieldValue = strlen($fieldValue);
-                if (!isset($reducer['maxWidth']) || (isset($reducer['maxWidth']) && $reducer['maxWidth'] < $fieldValue)) {
-                    $reducer['maxWidth'] = $fieldValue;
-                }
-                return $reducer;
-            }, ['min' => null, 'maxWidth' => null]);
-            return $map;
-        })->toArray();
+        $bench = array_merge([$this->{self::START}], $this->bench);
 
         // head
-        $keys = array_keys($this->bench[0]);
-        array_unshift($this->bench, array_combine($keys, $keys));
+        $keys = array_keys($bench[0]);
+        array_unshift($bench, array_combine($keys, $keys));
 
         $dataString = implode(PHP_EOL,
-            collection($this->bench)->map(function ($bench, $line) use ($maps) {
-                return implode('|', collection($maps)->map(function ($map, $column) use ($bench, $line) {
+            collection($bench)->map(function ($bench, $line) use ($maps) {
+                $lines = collection($maps)->map(function ($map) use ($bench, $line) {
+
+                    $map += [
+                        'field' => false,
+                        'format' => false,
+                        'width' => strlen($map['field']),
+                        'align' => STR_PAD_BOTH,
+                        'alignChar' => ' ',
+                        'hide' => false
+                    ];
+
+                    // entete
+                    if (!$line) {
+                        $bench[$map['field']] = $map['field'];
+                        $map = [
+                                'format' => false,
+                                'align' => STR_PAD_BOTH,
+                                'alignChar' => '_'
+                            ] + $map;
+                    }
+
+                    if ($map['hide']) {
+                        return;
+                    }
+
+                    // value
                     $fieldValue = $bench[$map['field']];
 
-                    if ($line && $map['field'] == 'time') {
-                        $fieldValue = round($fieldValue - $map['calc']['min'], 3) . 's';
+                    // format
+                    if ($map['format'] && is_callable($map['format'])) {
+                        $fieldValue = $map['format']($fieldValue, $bench);
                     }
 
-                    if ($line && $map['field'] == 'memory') {
-                        $fieldValue = Tools::humanFileSize($fieldValue - $map['calc']['min']);
+                    if (!is_scalar($fieldValue)) {
+                        $fieldValue = var_export($fieldValue, true);
                     }
 
-                    return str_pad($fieldValue, $map['calc']['maxWidth']);
-                })->toArray());
+                    $align = STR_PAD_BOTH;
+                    if (isset($map['align']) && in_array($map['align'], [STR_PAD_LEFT, STR_PAD_RIGHT, STR_PAD_BOTH])) {
+                        $align = $map['align'];
+                    }
+                    // align
+
+                    return str_pad($fieldValue, $map['width'] + 2, $map['alignChar'], $align);
+                });
+                return '|' . implode('|', $lines->toArray()) . '|';
             })->toArray()
         );
         return PHP_EOL . $dataString . PHP_EOL;
