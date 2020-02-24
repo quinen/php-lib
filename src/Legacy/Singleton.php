@@ -6,6 +6,14 @@ trait Singleton
 {
     protected static $_instance = [];
 
+    protected function __construct()
+    {
+
+    }
+
+    /**
+     * @return $this
+     */
     public static function getInstance()
     {
         $staticClass = static::class;
