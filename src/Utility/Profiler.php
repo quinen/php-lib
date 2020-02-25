@@ -24,7 +24,6 @@ class Profiler
     const END = '_end';
 
     protected $bench = [];
-    protected $keyLengthMax = 0;
 
     protected function __construct()
     {
@@ -33,10 +32,6 @@ class Profiler
 
     protected function write($key)
     {
-        if (($strlenKey = \strlen($key)) && $this->keyLengthMax < $strlenKey) {
-            $this->keyLengthMax = $strlenKey;
-        }
-
         $keyData = [
             'key' => $key,
             'time' => microtime(true),
@@ -84,11 +79,7 @@ class Profiler
 
     protected function read($options = [])
     {
-        return $this->table($options);
-    }
 
-    protected function table($options = [])
-    {
         $options += [
             'showConstants' => false
         ];
@@ -96,12 +87,10 @@ class Profiler
         $maps = [
             [
                 'field' => 'key',
-                'width' => $this->keyLengthMax,
                 'align' => STR_PAD_RIGHT
             ],
             [
                 'field' => 'time',
-                'width' => 6,
                 'format' => function ($f) {
                     return round(($f - $this->{self::START}['time']) * 1000) . ' ms';
                 },
@@ -109,7 +98,6 @@ class Profiler
             ],
             [
                 'field' => 'memory',
-                'width' => 8,
                 'format' => function ($f) {
                     return Tools::humanFileSize($f - $this->{self::START}['memory']);
                 },
@@ -121,7 +109,27 @@ class Profiler
                     if (in_array($d['key'], [self::START, self::END])) {
                         return count($f);
                     } else {
-                        return $f;
+                        $c = collection($f)->map(function ($value, $constant) {
+                            return compact('constant', 'value');
+                        })->toList();
+
+                        if (!empty($c)) {
+                            return $this->table($c, [
+                                [
+                                    'field' => 'constant',
+                                    //'width' => 40,
+                                    'align' => STR_PAD_RIGHT,
+                                    'alignChar' => '.'
+                                ],
+                                [
+                                    'field' => 'value',
+                                    //'width' => 110,
+                                    'align' => STR_PAD_RIGHT
+                                ]
+                            ]);
+
+                        }
+
                     }
                 },
                 'align' => STR_PAD_LEFT,
@@ -135,62 +143,111 @@ class Profiler
             self::bench('_printTable');
         }
 
-        $bench = array_merge([$this->{self::START}], $this->bench);
+        $data = array_merge([$this->{self::START}], $this->bench);
 
-        // head
-        $keys = array_keys($bench[0]);
-        array_unshift($bench, array_combine($keys, $keys));
+        return $this->table($data, $maps);
+    }
 
-        $dataString = implode(PHP_EOL,
-            collection($bench)->map(function ($bench, $line) use ($maps) {
-                $lines = collection($maps)->map(function ($map) use ($bench, $line) {
+    protected function table($data, $maps = [])
+    {
+        $head = $this->initTableHead($data, $maps);
 
-                    $map += [
-                        'field' => false,
-                        'format' => false,
-                        'width' => strlen($map['field']),
-                        'align' => STR_PAD_BOTH,
-                        'alignChar' => ' ',
-                        'hide' => false
+        $dataValued = array_map(function ($bench) use (&$maps) {
+            $lines = array_reduce(array_keys($maps), function ($reducer, $key) use ($bench, &$maps) {
+
+                // on s'assure que la map est un array
+                if (is_scalar($maps[$key])) {
+                    $maps[$key] = [
+                        'field' => $maps[$key]
                     ];
+                }
 
-                    // entete
-                    if (!$line) {
-                        $bench[$map['field']] = $map['field'];
-                        $map = [
-                                'format' => false,
-                                'align' => STR_PAD_BOTH,
-                                'alignChar' => '_'
-                            ] + $map;
-                    }
+                $map = $maps[$key];
 
-                    if ($map['hide']) {
-                        return;
-                    }
+                $map += [
+                    'field' => false,
+                    'format' => false,
+                    'align' => STR_PAD_BOTH,
+                    'alignChar' => ' ',
+                    'hide' => false
+                ];
 
-                    // value
-                    $fieldValue = $bench[$map['field']];
+                if ($map['hide']) {
+                    return $reducer;
+                }
 
-                    // format
-                    if ($map['format'] && is_callable($map['format'])) {
-                        $fieldValue = $map['format']($fieldValue, $bench);
-                    }
+                // value
+                $fieldValue = $bench[$map['field']];
 
-                    if (!is_scalar($fieldValue)) {
-                        $fieldValue = var_export($fieldValue, true);
-                    }
+                // format
+                if ($map['format'] && is_callable($map['format'])) {
+                    $fieldValue = $map['format']($fieldValue, $bench);
+                }
 
-                    $align = STR_PAD_BOTH;
-                    if (isset($map['align']) && in_array($map['align'], [STR_PAD_LEFT, STR_PAD_RIGHT, STR_PAD_BOTH])) {
-                        $align = $map['align'];
-                    }
-                    // align
+                $fieldValueLength = strlen($fieldValue);
 
-                    return str_pad($fieldValue, $map['width'] + 2, $map['alignChar'], $align);
-                });
-                return '|' . implode('|', $lines->toArray()) . '|';
-            })->toArray()
-        );
-        return PHP_EOL . $dataString . PHP_EOL;
+                if (!is_scalar($fieldValue)) {
+                    $fieldValue = var_export($fieldValue, true);
+                }
+
+                if (!isset($map['width']) || $map['width'] < $fieldValueLength) {
+                    $maps[$key]['width'] = $fieldValueLength;
+                }
+
+                if (!isset($maps[$key]['alignChar'])) {
+                    $maps[$key]['alignChar'] = $map['alignChar'];
+                }
+
+
+                //return str_pad($fieldValue, $map['width'] + 2, $map['alignChar'], $align);
+                $reducer[] = $fieldValue;
+                return $reducer;
+            }, []);
+            return $lines;
+        }, $data);
+
+        $dataFormatted = array_map(function ($line) use ($maps) {
+            return '|' . implode('|', array_map(function ($column, $columnIndex) use ($maps) {
+                    return str_pad($column, ($maps[$columnIndex]['width'] + 2) % 160, $maps[$columnIndex]['alignChar'],
+                        $maps[$columnIndex]['align']);
+                }, $line, array_keys($line))) . '|';
+        }, $dataValued);
+
+        $headFormatted = '|' . implode('|', array_map(function ($column, $columnIndex) use ($maps) {
+
+                $map = [
+                        'align' => STR_PAD_BOTH,
+                        'alignChar' => '_',
+                    ] + $maps[$columnIndex];
+                return str_pad($column, ($map['width'] + 2) % 160, $map['alignChar'], $map['align']);
+
+            }, $head, array_keys($head))) . '|';
+
+        return PHP_EOL . $headFormatted . PHP_EOL . implode(PHP_EOL, $dataFormatted) . PHP_EOL;
+    }
+
+    private function initTableHead($data, &$maps = [])
+    {
+        if (empty($maps)) {
+            $keys = array_keys($data[0]);
+            $maps = array_combine($keys, $keys);
+        }
+
+        return array_map(function ($map, $key) use (&$maps) {
+            // on s'assure que la map est un array
+            if (is_scalar($map)) {
+                $map = $maps[$key] = [
+                    'label' => $maps[$key],
+                    'field' => $maps[$key]
+                ];
+            } else {
+                $map += [
+                    'label' => $map['field']
+                ];
+            }
+
+            return $map['label'];
+
+        }, $maps, array_keys($maps));
     }
 }
