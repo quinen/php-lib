@@ -22,7 +22,9 @@ class Profiler
 
     const START = '_start';
     const END = '_end';
-
+    public $options = [
+        'constants' => false
+    ];
     protected $bench = [];
 
     protected function __construct()
@@ -38,12 +40,14 @@ class Profiler
             'memory' => memory_get_usage(),
         ];
 
+
         if ($key === self::START) {
             $keyData['constants'] = get_defined_constants();
         } else {
-            $keyData['constants'] = array_diff_key(get_defined_constants(), $this->{self::START}['constants']);
+            if ($this->options['constants']) {
+                $keyData['constants'] = array_diff_key(get_defined_constants(), $this->{self::START}['constants']);
+            }
         }
-
 
         if (in_array($key, [self::START, self::END])) {
             $this->{$key} = $keyData;
@@ -59,10 +63,10 @@ class Profiler
      *
      * */
 
-    public static function all($options = [])
+    public static function all()
     {
         self::bench(self::END);
-        return self::getInstance()->read($options);
+        return self::getInstance()->read();
     }
 
     public static function bench($key = null)
@@ -77,13 +81,8 @@ class Profiler
         self::getInstance()->write($key);
     }
 
-    protected function read($options = [])
+    protected function read()
     {
-
-        $options += [
-            'showConstants' => false
-        ];
-
         $maps = [
             [
                 'field' => 'key',
@@ -133,7 +132,7 @@ class Profiler
                     }
                 },
                 'align' => STR_PAD_LEFT,
-                'hide' => !$options['showConstants']
+                'hide' => !$this->options['constants']
             ]
         ];
 
@@ -186,7 +185,7 @@ class Profiler
 
                 $fieldValueLength = strlen($fieldValue);
 
-                if (!is_scalar($fieldValue)) {
+                if (!is_scalar($fieldValue) || is_bool($fieldValue)) {
                     $fieldValue = var_export($fieldValue, true);
                 }
 
@@ -213,15 +212,20 @@ class Profiler
                 }, $line, array_keys($line))) . '|';
         }, $dataValued);
 
-        $headFormatted = '|' . implode('|', array_map(function ($column, $columnIndex) use ($maps) {
+        $headFormatted = '|' . implode('|',
+                array_reduce(array_keys($head), function ($reducer, $columnIndex) use ($maps, $head) {
+                    $column = $head[$columnIndex];
 
-                $map = [
-                        'align' => STR_PAD_BOTH,
-                        'alignChar' => '_',
-                    ] + $maps[$columnIndex];
-                return str_pad($column, ($map['width'] + 2) % 160, $map['alignChar'], $map['align']);
+                    $map = [
+                            'align' => STR_PAD_BOTH,
+                            'alignChar' => '_',
+                        ] + $maps[$columnIndex];
+                    if ($column) {
+                        $reducer[] = str_pad($column, ($map['width'] + 2) % 160, $map['alignChar'], $map['align']);
+                    }
+                    return $reducer;
 
-            }, $head, array_keys($head))) . '|';
+                }, [])) . '|';
 
         return PHP_EOL . $headFormatted . PHP_EOL . implode(PHP_EOL, $dataFormatted) . PHP_EOL;
     }
@@ -238,16 +242,27 @@ class Profiler
             if (is_scalar($map)) {
                 $map = $maps[$key] = [
                     'label' => $maps[$key],
-                    'field' => $maps[$key]
+                    'field' => $maps[$key],
+                    'hide' => false
                 ];
             } else {
                 $map += [
-                    'label' => $map['field']
+                    'label' => $map['field'],
+                    'hide' => false
                 ];
             }
+            if (!$map['hide']) {
+                return $map['label'];
+            } else {
+                return false;
+            }
 
-            return $map['label'];
 
         }, $maps, array_keys($maps));
+    }
+
+    public static function options($options)
+    {
+        self::getInstance()->options = $options + self::getInstance()->options;
     }
 }
