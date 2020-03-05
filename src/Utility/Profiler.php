@@ -183,11 +183,11 @@ class Profiler
                     $fieldValue = $map['format']($fieldValue, $bench);
                 }
 
-                $fieldValueLength = strlen($fieldValue);
-
                 if (!is_scalar($fieldValue) || is_bool($fieldValue)) {
                     $fieldValue = var_export($fieldValue, true);
                 }
+
+                $fieldValueLength = strlen($fieldValue);
 
                 if (!isset($map['width']) || $map['width'] < $fieldValueLength) {
                     $maps[$key]['width'] = $fieldValueLength;
