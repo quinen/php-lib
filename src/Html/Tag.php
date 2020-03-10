@@ -2,6 +2,9 @@
 
 namespace QuinenLib\Html;
 
+use QuinenLib\Tools;
+use QuinenLib\Legacy\Url;
+
 class Tag
 {
     private $tag;
@@ -15,6 +18,17 @@ class Tag
         $this->options = $options + [
                 '_isAutoClosed' => false
             ];
+    }
+
+
+
+    public static function link($label, $href = '/', array $options = [])
+    {
+        $options = [
+                'href' => new Url($href).''
+            ] + $options;
+
+        return new self('a', $label, $options);
     }
 
     public static function css($href, array $options = [])
@@ -32,10 +46,20 @@ class Tag
     {
         $get = new Tag('pre', 'Get ' . var_export($_GET, true));
         $post = new Tag('pre', 'Post ' . var_export($_POST, true));
-        $session = new Tag('pre', 'Session ' . var_export($_SESSION, true));
+        if (isset($_SESSION)) {
+            $session = new Tag('pre', 'Session ' . var_export($_SESSION, true));
+        } else {
+            $session = new Tag('pre', 'Session ', ['style' => 'background-color:red;']);
+        }
+
         $cookies = new Tag('pre', 'Cookies ' . var_export($_COOKIE, true));
         $server = new Tag('pre', 'Server ' . var_export($_SERVER, true));
-        return new Tag('div', $get . $post . $session . $cookies . $server, ['style' => 'display:flex;flex-wrap:wrap']);
+        $constants = new Tag('pre', 'Constants ' . var_export(get_defined_constants(true)['user'], true));
+        return new Tag(
+            'div',
+            $get . $post . $session . $cookies . $server . $constants,
+            ['style' => 'display:flex;flex-wrap:wrap']
+        );
     }
 
     public function __toString()

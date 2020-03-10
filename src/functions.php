@@ -18,3 +18,21 @@ if (!function_exists('template')) {
         return $templater($template, $data);
     }
 }
+
+if (!function_exists('debug_lite')) {
+    /**
+     * fonction debug sans aucune dependance externe, a copier coller
+     * @param $var
+     */
+    function debug_lite($var)
+    {
+        $dbbt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
+        $info = $dbbt[0]['file'] . '.' . $dbbt[0]['line'];
+
+        if (PHP_SAPI === 'cli') {
+            echo PHP_EOL . str_pad($info, 80, '_', STR_PAD_LEFT) . PHP_EOL . var_export($var, true) . PHP_EOL;
+        } else {
+            echo '<pre>' . $info . PHP_EOL . var_export($var, true) . '</pre>';
+        }
+    }
+}

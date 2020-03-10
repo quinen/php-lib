@@ -29,4 +29,10 @@ class Request
         return Hash::get($_POST, $index, $default);
     }
 
+    public function getServer($index = null,$default = null){
+        if ($index === null) {
+            return $_SERVER;
+        }
+        return Hash::get($_SERVER, $index, $default);
+    }
 }

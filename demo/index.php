@@ -1,9 +1,10 @@
 <?php
+
+use QuinenLib\Legacy\Url;
+
+define('DIR_WWW_ROOT',dirname(__DIR__));
+
 require_once dirname(__DIR__) . '/vendor/autoload.php';
 
-echo "index du dossier demo";
 
-include('templates/template.php');
-
-
-echo '<pre>' . var_export($_SERVER, true) . '</pre>';
+require_once 'templates/index.php';
