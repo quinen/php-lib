@@ -9,6 +9,8 @@
 namespace QuinenLib\Legacy;
 
 
+use QuinenLib\Mvc\Request;
+
 class Url
 {
     const SCHEME_HTTP = 'http';

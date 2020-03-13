@@ -33,7 +33,7 @@ class Tag
 
     public static function css($href, array $options = [])
     {
-        //  <link rel="stylesheet" href="../public/css/templates.css?v6" type="text/css" />
+        //  <link rel="stylesheet" href="../public/css/views.css?v6" type="text/css" />
         return new self('link', null, $options + [
                 '_isAutoClosed' => true,
                 'rel' => 'stylesheet',
@@ -49,7 +49,7 @@ class Tag
         if (isset($_SESSION)) {
             $session = new Tag('pre', 'Session ' . var_export($_SESSION, true));
         } else {
-            $session = new Tag('pre', 'Session ', ['style' => 'background-color:red;']);
+            $session = new Tag('pre', 'Session ', ['style' => 'background-color:#ffcccc;']);
         }
 
         $cookies = new Tag('pre', 'Cookies ' . var_export($_COOKIE, true));

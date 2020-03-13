@@ -6,7 +6,7 @@
  * Time: 8:54 AM
  */
 
-namespace QuinenLib\Legacy;
+namespace QuinenLib\Mvc;
 
 
 use Cake\Utility\Hash;
