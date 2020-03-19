@@ -35,4 +35,15 @@ class Strings
         return false;
 
     }
+
+    public static function jsonTrim($stream)
+    {
+        $firstAccolade = mb_strpos($stream, '{');
+        $lastAccolade = mb_strrpos($stream, '}');
+        //debug([$stream,$firstAccolade,$lastAccolade,mb_strlen($stream)]);
+        if ($firstAccolade !== 0 || $lastAccolade !== (mb_strlen($stream) - 1)) {
+            $stream = mb_substr($stream, $firstAccolade, $lastAccolade-1);
+        }
+        return $stream;
+    }
 }
