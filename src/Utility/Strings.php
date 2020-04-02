@@ -42,7 +42,7 @@ class Strings
         $lastAccolade = mb_strrpos($stream, '}');
         //debug([$stream,$firstAccolade,$lastAccolade,mb_strlen($stream)]);
         if ($firstAccolade !== 0 || $lastAccolade !== (mb_strlen($stream) - 1)) {
-            $stream = mb_substr($stream, $firstAccolade, $lastAccolade-1);
+            $stream = mb_substr($stream, $firstAccolade, $lastAccolade - 1);
         }
         return $stream;
     }
@@ -58,5 +58,16 @@ class Strings
         |[\xF1-\xF3][\x80-\xBF]{3}          # planes 4-15
         |\xF4[\x80-\x8F][\x80-\xBF]{2}      # plane 16
         )+%xs', $_string);
+    }
+
+    public static function detectEncoding($str, $to_enc = 'UTF-8')
+    {
+        return implode('<br>',
+            array_merge(['<b>' . $str . '</b>'],
+                array_map(function ($enc) use ($str, $to_enc) {
+                    return mb_convert_encoding($str, $enc, $to_enc) . ' : ' . $enc;
+                }, mb_list_encodings())
+            )
+        );
     }
 }
