@@ -5,6 +5,7 @@ namespace QuinenLib\Files;
 
 
 use Cake\ORM\Entity;
+use Cake\Utility\Hash;
 use QuinenLib\Arrays\MapTrait;
 
 class Csv
@@ -90,7 +91,10 @@ class Csv
             'delimiter' => ',',
             'enclosure' => '"',
             'escapeChar' => "\\",
-            'isHeader' => true
+            'isHeader' => true,
+            // eliminate virtuals fields
+            'virtuals' => [],
+
         ];
         $f = fopen('php://memory', 'rb+');
 
@@ -99,16 +103,21 @@ class Csv
         };
         collection($data)->each(
             function ($item, $index) use ($f, $options, $fputcsv) {
+
+                $string = '';
                 /** @var Entity $item * */
                 if ($item instanceof Entity) {
+                    // on elimine les champs virtuels inutiles
+                    $item->setVirtual($options['virtuals']);
+                    $itemArray = $item->toArray();
                     if ($index === 0 && $options['isHeader']) {
                         $fields = $item->getVisible();
-                        return $fputcsv($fields);
+                        $string .= $fputcsv($fields);
                     }
-                    $item = $item->toArray();
+                    $item = $itemArray;
                 }
-
-                return $fputcsv($item);
+                $string .= $fputcsv($item);
+                return $string;
             }
         );
         rewind($f);
@@ -118,9 +127,51 @@ class Csv
     /*
      *
      * */
-    public static function fromMap($data, $maps, $options = [])
+    public static function fromMiniMap($data, $maps, $options = [])
     {
-        //TODO a implementer
+        $options += [
+            'delimiter' => ',',
+            'enclosure' => '"',
+            'escapeChar' => "\\",
+            'isHeader' => true,
+            'addBom' => false
+        ];
+        $f = fopen('php://memory', 'rb+');
+//$options['enclosure'] = '';
+        $fputcsv = function ($data) use ($f, $options) {
+            //return fputcsv($f, array_map(function($v){return "\"$v\"";},$data), $options['delimiter'], $options['enclosure'], $options['escapeChar']);
+            return fputcsv($f, $data, $options['delimiter'], $options['enclosure'], $options['escapeChar']);
+        };
+        collection($data->disableBufferedResults())->each(
+            function ($item, $index) use ($f, $options, $fputcsv, $maps) {
+                //debug($item);
+                $string = '';
+                /** @var Entity $item * */
+                if ($item instanceof Entity) {
+                    if ($index === 0 && $options['addBom']) {
+                        $string .= self::BOM;
+                    }
+                    if ($index === 0 && $options['isHeader']) {
+                        $fields = array_keys($maps);
+                        $string .= $fputcsv($fields);
+                    }
+
+                    $itemArray = collection($maps)->map(function ($v, $k) use ($item) {
+                        if (is_callable($v)) {
+                            return $v($item);
+                        } else if (empty($v)) {
+                            return $v;
+                        }
+                        return Hash::get($item, $v);
+                    })->toArray();
+                    $item = $itemArray;
+                }
+                $string .= $fputcsv($item);
+                return $string;
+            }
+        );
+        rewind($f);
+        return stream_get_contents($f);
     }
 
     public function getMapFormat($map)

@@ -17,7 +17,13 @@ class Strings
         return (substr($string, 0, $len) === $startString);
     }
 
-    public static function strrchr(string $haystack, string $needle, int $pos = 0)
+    /**
+     * @param string $haystack
+     * @param string $needle
+     * @param int $pos
+     * @return bool|string
+     */
+    public static function strrchr($haystack, $needle,$pos = 0)
     {
         if ($pos === 0) {
             return \strrchr($haystack, $needle);
