@@ -127,6 +127,7 @@ trait MapTrait
                 foreach (['label', 'field', 'group', 'zone'] as $i) {
                     if (isset($map[$i])) {
                         //debug(get_class($this));
+                        //debug($map[$i][1]);
                         /* @var array $map [$i] */
                         $map[$i][1] = $this->addClass($map[$i][1], $map[$option], $option);
                     }
@@ -186,8 +187,8 @@ trait MapTrait
 
     protected function transformMapsWithDatas($maps, $datas, $lineOptions = [])
     {
-        return collection($datas)->map(function ($line) use ($maps, $lineOptions) {
-            $lineTransformed = $this->transformMapsWithLine($maps, $line);
+        return collection($datas)->map(function ($line, $i) use ($maps, $lineOptions) {
+            $lineTransformed = $this->transformMapsWithLine($maps, $line, $i);
             if ($lineOptions instanceof \Closure) {
                 $lineOptions = $lineOptions($line);
             }
@@ -195,9 +196,9 @@ trait MapTrait
         });
     }
 
-    protected function transformMapsWithLine($maps, $row)
+    protected function transformMapsWithLine($maps, $row, $rowIndex = false)
     {
-        return collection($maps)->reduce(function ($reducer, $map, $i) use ($row) {
+        return collection($maps)->reduce(function ($reducer, $map, $i) use ($row, $rowIndex) {
 
             // template replacing
             $map = \template($map, $row);
@@ -267,9 +268,12 @@ trait MapTrait
 
         if (Configure::read('debug')) {
             if (!(is_array($data) || $data instanceof \ArrayAccess)) {
-                debug([$field, $data]);
+                //debug([$field, $data]);
                 return null;
             }
+        }
+        if ($field === null) {
+            return $data;
         }
         return Hash::get($data, $field);
     }

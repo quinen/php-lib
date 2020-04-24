@@ -50,4 +50,10 @@ class Arrays
             return Strings::startsWith($e, $startString);
         });
     }
+
+    public static function transpose(array $array)
+    {
+        array_unshift($array, null);
+        return call_user_func_array('array_map', $array);
+    }
 }
