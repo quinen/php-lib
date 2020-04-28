@@ -134,13 +134,17 @@ class Csv
             'enclosure' => '"',
             'escapeChar' => "\\",
             'isHeader' => true,
-            'addBom' => false
+            'addBom' => false,
+            'newLine' => "\r\n"
         ];
         $f = fopen('php://memory', 'rb+');
-//$options['enclosure'] = '';
+
         $fputcsv = function ($data) use ($f, $options) {
             //return fputcsv($f, array_map(function($v){return "\"$v\"";},$data), $options['delimiter'], $options['enclosure'], $options['escapeChar']);
-            return fputcsv($f, $data, $options['delimiter'], $options['enclosure'], $options['escapeChar']);
+            $csv = fputcsv($f, $data, $options['delimiter'], $options['enclosure'], $options['escapeChar']);
+            fseek($f, -1, SEEK_CUR);
+            fwrite($f, $options['newLine']);
+            return $csv;
         };
         collection($data->disableBufferedResults())->each(
             function ($item, $index) use ($f, $options, $fputcsv, $maps) {
@@ -153,7 +157,7 @@ class Csv
                     }
                     if ($index === 0 && $options['isHeader']) {
                         $fields = array_keys($maps);
-                        $string .= $fputcsv($fields);
+                        $fputcsv($fields);
                     }
 
                     $itemArray = collection($maps)->map(function ($v, $k) use ($item) {
@@ -166,8 +170,7 @@ class Csv
                     })->toArray();
                     $item = $itemArray;
                 }
-                $string .= $fputcsv($item);
-                return $string;
+                $fputcsv($item);
             }
         );
         rewind($f);
