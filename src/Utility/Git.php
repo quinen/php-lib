@@ -66,7 +66,6 @@ class Git
             if ($hash = file_get_contents(implode(DIRECTORY_SEPARATOR, [$this->getPath(), 'refs', 'heads', $branch]))) {
                 $this->hashes[$branch] = [trim($hash), trim(substr($hash, 0, 7))];
             }
-            debug($this->hashes);
         }
 
         return $this->hashes[$branch][intval($isShort)];
