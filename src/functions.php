@@ -32,7 +32,7 @@ if (!function_exists('debug_lite')) {
         if (PHP_SAPI === 'cli') {
             echo PHP_EOL . str_pad($info, 80, '_', STR_PAD_LEFT) . PHP_EOL . var_export($var, true) . PHP_EOL;
         } else {
-            echo '<pre>' . $info . PHP_EOL . var_export($var, true) . '</pre>';
+            echo '<pre>' . PHP_EOL . $info . PHP_EOL . var_export($var, true) . PHP_EOL . '</pre>';
         }
     }
 }
