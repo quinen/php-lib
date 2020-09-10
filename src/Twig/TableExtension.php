@@ -9,6 +9,7 @@
 namespace QuinenLib\Twig;
 
 
+use QuinenLib\Html\Table;
 use Twig\Environment;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
@@ -18,13 +19,13 @@ class TableExtension extends AbstractExtension
     public function getFunctions()
     {
         return [
-            new TwigFunction('table', [$this, 'table'])
+            new TwigFunction('table', [$this, 'table'],['is_safe' => ['html+']])
         ];
     }
 
     public function table(array $data, array $maps = [], array $options = [])
     {
-        return json_encode($data);
+        return (string)(new Table($data,$maps,$options));
     }
 
     /**

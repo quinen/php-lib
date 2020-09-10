@@ -68,7 +68,7 @@ class Map
         return $default;
     }
 
-    public function getMaps()
+    public function toArray()
     {
         return $this->maps;
     }
@@ -193,8 +193,14 @@ class Map
     }
 
 
-    public function transformArray(array $data)
+    public function transformArray($data)
     {
+        if(!is_array($data)){
+            debug_lite((array)new \ArrayObject($data));
+            debug_lite(new \ArrayObject($data));
+            debug_lite($data);
+        }
+
         $line = [];
         foreach ($this->maps as $map) {
             $map = \template($map, $data);
@@ -223,8 +229,11 @@ class Map
 
     public function transformArrays(array $data, $options = [])
     {
+        //debug_lite($data);
         return array_map(function ($line) use ($options) {
+
             $lineTransformed = $this->transformArray($line);
+            //debug_lite([$line,$lineTransformed]);
             if ($options instanceof \Closure) {
                 $options = $options($line);
             }
