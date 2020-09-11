@@ -3,6 +3,7 @@
 namespace QuinenLib\Map;
 
 use QuinenLib\Arrays\ContentOptionsTrait;
+use QuinenLib\Html\Tag;
 
 /**
  * Class Map
@@ -182,10 +183,15 @@ class Map
             }
 
             if (is_string($map['format'])) {
+                debug_lite($map);
                 $methodName = 'format' . ucfirst($map['format']);
+                debug_lite($methodName);
+                debug_lite(method_exists($this->options['caller'], $methodName));
+                var_dump($this->options['caller']);
                 if (method_exists($this->options['caller'], $methodName)) {
                     $map['format'] = [[$this->options['caller']], $methodName];
                 }
+                debug_lite($map);
             }
             $maps[] = $map;
         }
@@ -195,16 +201,10 @@ class Map
 
     public function transformArray($data)
     {
-        if(!is_array($data)){
-            debug_lite((array)new \ArrayObject($data));
-            debug_lite(new \ArrayObject($data));
-            debug_lite($data);
-        }
-
         $line = [];
         foreach ($this->maps as $map) {
             $map = \template($map, $data);
-
+            //debug_lite($map);
             if ($map['hide']) {
                 continue;
             }
@@ -221,6 +221,10 @@ class Map
             }
 
             $format = $this->getFormatFromValue($value, $map['format']);
+
+            if (!is_scalar($format)) {
+                $format = new Tag('pre', trim(\json_encode($format, JSON_PRETTY_PRINT), "{}[]\n"));
+            }
 
             $line[] = [$format, $fieldOptions];
         }
@@ -241,7 +245,7 @@ class Map
         }, $data);
     }
 
-    private function getValueFromField($field, array $data)
+    private function getValueFromField($field, $data)
     {
         if ($field === false) {
             return false;

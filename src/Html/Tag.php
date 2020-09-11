@@ -21,11 +21,10 @@ class Tag
     }
 
 
-
     public static function link($label, $href = '/', array $options = [])
     {
         $options = [
-                'href' => new Url($href).''
+                'href' => new Url($href) . ''
             ] + $options;
 
         return new self('a', $label, $options);
@@ -66,7 +65,7 @@ class Tag
     {
         if ($this->content === null) {
             if ($this->options['_isAutoClosed']) {
-                return '<' . $this->tag . $this->getFormattedOptions() . '/>';
+                return '<' . $this->tag . rtrim($this->getFormattedOptions()) . '/>';
             } else {
                 return '<' . $this->tag . '>';
             }
@@ -76,7 +75,7 @@ class Tag
                 $this->content = json_encode($this->content, JSON_PRETTY_PRINT);
             }
         }
-        return '<' . $this->tag . $this->getFormattedOptions() . '>' . $this->content . '</' . $this->tag . '>';
+        return '<' . $this->tag . rtrim($this->getFormattedOptions()) . '>' . $this->content . '</' . $this->tag . '>';
     }
 
     private function getFormattedOptions()

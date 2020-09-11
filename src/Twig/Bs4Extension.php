@@ -10,25 +10,20 @@ namespace QuinenLib\Twig;
 
 
 use QuinenLib\Html\Bs4;
-use QuinenLib\Html\Table;
 use Twig\Environment;
 use Twig\Extension\AbstractExtension;
+use Twig\Extension\GlobalsInterface;
 use Twig\TwigFunction;
 
-class TableExtension extends AbstractExtension
+class Bs4Extension extends AbstractExtension implements GlobalsInterface
 {
+
     public function getFunctions()
     {
         return [
-            new TwigFunction('table', [$this, 'table'],['is_safe' => ['html']])
+            new TwigFunction('bs4_table', [(new Bs4()), 'table'],['is_safe' => ['html']])
         ];
     }
-
-    public function table(array $data, array $maps = [], array $options = [])
-    {
-        return (string)(new Table($data,$maps,$options));
-    }
-
     /**
      * Initializes the runtime environment.
      *
@@ -48,9 +43,11 @@ class TableExtension extends AbstractExtension
      *
      * @deprecated since 1.23 (to be removed in 2.0), implement \Twig_Extension_GlobalsInterface instead
      */
-    public function getGlobals()
+    public function getGlobals(): array
     {
-        // TODO: Implement getGlobals() method.
+        return [
+            'bs4' => (new Bs4())
+        ];
     }
 
     /**
