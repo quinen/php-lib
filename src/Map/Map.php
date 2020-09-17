@@ -162,7 +162,6 @@ class Map
                         }
                     }
                 }
-
             }
 
             // auto label
@@ -183,15 +182,10 @@ class Map
             }
 
             if (is_string($map['format'])) {
-                debug_lite($map);
                 $methodName = 'format' . ucfirst($map['format']);
-                debug_lite($methodName);
-                debug_lite(method_exists($this->options['caller'], $methodName));
-                var_dump($this->options['caller']);
                 if (method_exists($this->options['caller'], $methodName)) {
-                    $map['format'] = [[$this->options['caller']], $methodName];
+                    $map['format'] = [[$this->options['caller'], $methodName]];
                 }
-                debug_lite($map);
             }
             $maps[] = $map;
         }
@@ -289,6 +283,7 @@ class Map
 
             $value = \call_user_func_array($callable, $format);
         }
+
         return $value;
     }
 

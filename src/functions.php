@@ -29,11 +29,28 @@ if (!function_exists('debug_lite')) {
         $dbbt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1);
         $info = $dbbt[0]['file'] . '.' . $dbbt[0]['line'];
 
-        if (PHP_SAPI === 'cli') {
+        $ve = function ($expression, $return = FALSE) {
+            $export = var_export($expression, TRUE);
+            $patterns = [
+                "/array \(/" => '[',
+                "/^([ ]*)\)(,?)$/m" => '$1]$2',
+                "/=>[ ]?\n[ ]+\[/" => '=> [',
+                "/([ ]*)(\'[^\']+\') => ([\[\'])/" => '$1$2 => $3',
+            ];
+            $export = preg_replace(array_keys($patterns), array_values($patterns), $export);
+            if ((bool)$return) return $export; else echo $export;
+        };
 
-            echo PHP_EOL . str_pad($info, 80, '_', STR_PAD_LEFT) . PHP_EOL . var_export($var, true) . PHP_EOL;
+        try {
+            $export = $ve($var, true);
+        } catch (\Exception $e) {
+            $export = print_r($var, true);
+        }
+
+        if (PHP_SAPI === 'cli') {
+            echo PHP_EOL . str_pad($info, 80, '_', STR_PAD_LEFT) . PHP_EOL . $export . PHP_EOL;
         } else {
-            echo '<pre>' . PHP_EOL . $info . PHP_EOL . var_export($var, true) . PHP_EOL . '</pre>';
+            echo '<pre>' . PHP_EOL . $info . PHP_EOL . $export . PHP_EOL . '</pre>';
         }
     }
 }

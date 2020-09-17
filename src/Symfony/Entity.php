@@ -16,6 +16,17 @@ use function Symfony\Component\String\u;
 abstract class Entity implements ArrayAccess, JsonSerializable
 {
 
+    public function __get($name)
+    {
+        return \json_encode(['get', $name]);
+    }
+
+
+    public function __call($name, $arguments)
+    {
+        return $this[$name];
+        return \json_encode(['call', $name, $arguments, $this[$name], $this->{$name}]);
+    }
 
     /**
      * Whether a offset exists
@@ -32,8 +43,9 @@ abstract class Entity implements ArrayAccess, JsonSerializable
     public function offsetExists($offset)
     {
         $getter = $this->getMethodNameFromField($offset);
+        $property = $this->getPropertyNameFromField($offset);
 
-        if (method_exists($this, $getter) || isset($this->{$offset})) {
+        if (method_exists($this, $getter) || isset($this->{$property})) {
             return true;
         }
 
@@ -52,10 +64,11 @@ abstract class Entity implements ArrayAccess, JsonSerializable
     public function offsetGet($offset)
     {
         $getter = $this->getMethodNameFromField($offset);
+        $property = $this->getPropertyNameFromField($offset);
         if (method_exists($this, $getter)) {
             return $this->{$getter}();
         } elseif (isset($this->{$offset})) {
-            return $this->{$offset};
+            return $this->{$property};
         }
         return null;
         //throw new \Exception('undefined offset : `' . $offset . '` on ' . self::class);
@@ -76,10 +89,11 @@ abstract class Entity implements ArrayAccess, JsonSerializable
     public function offsetSet($offset, $value)
     {
         $setter = $this->getMethodNameFromField($offset, 'set');
+        $property = $this->getPropertyNameFromField($offset);
         if (method_exists($this, $setter)) {
             $this->{$setter}($value);
-        } elseif (isset($this->{$offset})) {
-            $this->{$offset} = $value;
+        } elseif (isset($this->{$property})) {
+            $this->{$property} = $value;
         }
     }
 
@@ -94,12 +108,18 @@ abstract class Entity implements ArrayAccess, JsonSerializable
      */
     public function offsetUnset($offset)
     {
-        unset($this->{$offset});
+        $property = $this->getPropertyNameFromField($offset);
+        unset($this->{$property});
     }
 
     private function getMethodNameFromField($field, $prefix = 'get')
     {
         return u($field)->camel()->title()->ensureStart('get')->toString();
+    }
+
+    private function getPropertyNameFromField($field)
+    {
+        return u($field)->camel()->toString();
     }
 
     /**
@@ -113,17 +133,15 @@ abstract class Entity implements ArrayAccess, JsonSerializable
     public function jsonSerialize()
     {
         $fields = [];
-        foreach((new ReflectionClass($this))->getProperties() as $property){
+        foreach ((new ReflectionClass($this))->getProperties() as $property) {
             $fields[$property->name] = $this[$property->name];
         }
         return $fields;
-        return get_object_vars($this);
     }
 
     public function __toString()
     {
-        throw new \Exception('oops');
-        return \json_encode($this, JSON_PRETTY_PRINT);
+        return static::class . PHP_EOL . \json_encode($this, JSON_PRETTY_PRINT);
     }
 
 }

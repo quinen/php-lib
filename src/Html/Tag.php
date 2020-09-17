@@ -20,7 +20,6 @@ class Tag
             ];
     }
 
-
     public static function link($label, $href = '/', array $options = [])
     {
         $options = [

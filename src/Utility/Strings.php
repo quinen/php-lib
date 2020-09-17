@@ -23,7 +23,7 @@ class Strings
      * @param int $pos
      * @return bool|string
      */
-    public static function strrchr($haystack, $needle,$pos = 0)
+    public static function strrchr($haystack, $needle, $pos = 0)
     {
         if ($pos === 0) {
             return \strrchr($haystack, $needle);
@@ -75,5 +75,18 @@ class Strings
                 }, mb_list_encodings())
             )
         );
+    }
+
+    public static function formatSql($str)
+    {
+        // on enleve tous les souts de ligne
+        $str = str_replace(["\r", "\n"], [' ', ' '], $str);
+        // on saute des lignes a chaque mot clés
+        $str = preg_replace('/(select|from|left join|left outer join|where|and |order by|limit)/i', PHP_EOL . '$1', $str);
+        // on suate une ligne apres chaque virgule
+        $str = preg_replace('/(\,)/i', '$1' . PHP_EOL."\t", $str);
+        // on tabule devant chaque and
+        $str = preg_replace('/(and )/i', "\t" . '$1', $str);
+        return $str;
     }
 }

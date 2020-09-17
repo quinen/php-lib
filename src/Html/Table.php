@@ -11,11 +11,11 @@ namespace QuinenLib\Html;
 
 use QuinenLib\Arrays\ContentOptionsTrait;
 use QuinenLib\Map\Map;
-use QuinenLib\Utility\Dates;
 
 class Table
 {
     use ContentOptionsTrait;
+    use FormatTrait;
 
     private $maps;
     private $data;
@@ -80,10 +80,6 @@ class Table
     public function __toString()
     {
         return (string)new Tag('table', $this->getHead() . $this->getBody(), $this->options);
-    }
-
-    public function formatDatetime(\DateTime $datetime){
-        return '>'.$datetime->format(Dates::FORMAT_JOURNOM_JOUR_MOIS_ANNEE_HEURE_MINUTE);
     }
 
 

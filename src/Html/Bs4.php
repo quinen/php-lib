@@ -13,6 +13,8 @@ use QuinenLib\Utility\Strings;
 
 class Bs4
 {
+    use FormatTrait;
+
     const THEME_LIGHT = 'light';
     const THEME_DARK = 'dark';
 
