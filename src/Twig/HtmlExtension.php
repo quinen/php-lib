@@ -8,25 +8,34 @@
 
 namespace QuinenLib\Twig;
 
-
-use QuinenLib\Html\Bs4;
+use QuinenLib\Html\FontAwesome5;
 use QuinenLib\Html\Table;
 use Twig\Environment;
 use Twig\Extension\AbstractExtension;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 
-class TableExtension extends AbstractExtension
+class HtmlExtension extends AbstractExtension
 {
     public function getFunctions()
     {
         return [
-            new TwigFunction('table', [$this, 'table'],['is_safe' => ['html']])
+            new TwigFunction('table', [$this, 'table'], ['is_safe' => ['html']])
+        ];
+    }
+
+    public function getFilters()
+    {
+        return [
+            new TwigFilter('fa5', function ($name, array $options = []) {
+                return new FontAwesome5($name, $options);
+            }, ['is_safe' => ['html']])
         ];
     }
 
     public function table(array $data, array $maps = [], array $options = [])
     {
-        return (string)(new Table($data,$maps,$options));
+        return (string)(new Table($data, $maps, $options));
     }
 
     /**
