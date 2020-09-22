@@ -18,7 +18,59 @@ class Bs4
     const THEME_LIGHT = 'light';
     const THEME_DARK = 'dark';
 
+    const VARIANT_PRIMARY = 'primary';
+
     public $theme = self::THEME_LIGHT;
+
+    private $variants = [
+        self::VARIANT_PRIMARY,
+        'secondary',
+        'success',
+        'danger',
+        'warning',
+        'info',
+        'light',
+        'dark'
+    ];
+
+
+    public function badge($content, array $options = [])
+    {
+        $options += [
+            'variant' => self::VARIANT_PRIMARY
+        ];
+
+        $options = $this->concatValueInOptions($options, 'badge badge-' . $options['variant']);
+        unset($options['variant']);
+
+        return (new Tag('span', $content, $options));
+    }
+
+    public function menuTitle($title, array $options = [])
+    {
+        $options += [
+            'color' => self::VARIANT_PRIMARY
+        ];
+
+        return new Tag(
+            'span',
+            implode('&nbsp;', array_map(function ($word) use ($options) {
+                $firstLetter = mb_strtoupper(mb_substr($word, 0, 1));
+                $firstLetter = new Tag(
+                    'span',
+                    $firstLetter,
+                    [
+                        'class' => 'font-weight-bold',
+                        'style' => 'color:var(--' . $options['color'] . ')'
+                    ]);
+                $word = $firstLetter . mb_substr($word, 1);
+                return $word;
+            }, explode(' ', $title))),
+            ['title' => $title]
+        );
+
+
+    }
 
     public function table(array $data, array $maps = [], array $options = [])
     {
@@ -37,6 +89,7 @@ class Bs4
 
         return (string)(new Table($data, $maps, $options));
     }
+
 
     private function concatValueInOptions(array $data, string $value, string $key = 'class')
     {

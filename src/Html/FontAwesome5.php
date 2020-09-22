@@ -50,7 +50,7 @@ class FontAwesome5
         'fab' => ['chrome', 'firefox', 'safari']
     ];
 
-    private $style = false;
+    private $style = [];
 
 
     /**
@@ -80,41 +80,48 @@ class FontAwesome5
 
     private function setNameAndStyleFromName($name)
     {
-        // if name start with a style, then set style and name
-        // else set juste the name and style to solid
-        $startWithStyle = array_reduce(array_keys($this->styles), function ($r, $style) use ($name) {
-            if (!$r) {
-                if (Strings::startsWith($name, $style . '-')) {
-                    $r = $style;
-                }
-            }
-            return $r;
-        }, $this->style);
 
-        if ($startWithStyle) {
-            $this->name = mb_substr($name, 4);
-            $this->style = $startWithStyle;
-        } else {
-            $this->name = $name;
-            $this->style = $this->getDefaultStyleFromName($name);
+        $names = explode(' ', $name);
+        foreach ($names as $k => $name) {
+            // if name start with a style, then set style and name
+            // else set juste the name and style to solid
+            $startWithStyle = array_reduce(array_keys($this->styles), function ($r, $style) use ($name) {
+                if (!$r) {
+                    if (Strings::startsWith($name, $style . '-')) {
+                        $r = $style;
+                    }
+                }
+                return $r;
+            }, false);
+
+            if ($startWithStyle) {
+                $this->name[$k] = mb_substr($name, 4);
+                $this->style[$k] = $startWithStyle;
+            } else {
+                $this->name[$k] = $name;
+                $this->style[$k] = $this->getDefaultStyleFromName($name);
+            }
         }
     }
 
     public function __toString()
     {
+        $return = '';
+        foreach ($this->name as $k => $name) {
+            $options = [
+                    'class' => trim(implode(' ', [
+                        $this->style[$k],
+                        ' fa-' . $name,
+                        $this->getSize(),
+                        ($this->isFixedWidth ? 'fa-fw' : ''),
+                        $this->getRotate()
+                    ]))
+                ] + $this->options;
 
+            $return .= (string)new Tag('i', '', $options);
+        }
+        return $return;
 
-        $options = [
-                'class' => trim(implode(' ', [
-                    $this->style,
-                    ' fa-' . $this->name,
-                    $this->getSize(),
-                    ($this->isFixedWidth ? 'fa-fw' : ''),
-                    $this->getRotate()
-                ]))
-            ] + $this->options;
-
-        return (string)new Tag('i', '', $options);
     }
 
     private function getDefaultStyleFromName($name)

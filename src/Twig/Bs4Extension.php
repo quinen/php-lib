@@ -13,6 +13,7 @@ use QuinenLib\Html\Bs4;
 use Twig\Environment;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
+use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 class Bs4Extension extends AbstractExtension implements GlobalsInterface
@@ -21,9 +22,18 @@ class Bs4Extension extends AbstractExtension implements GlobalsInterface
     public function getFunctions()
     {
         return [
-            new TwigFunction('bs4_table', [(new Bs4()), 'table'],['is_safe' => ['html']])
+            new TwigFunction('bs4_badge', [(new Bs4()), 'badge'], ['is_safe' => ['html']]),
+            new TwigFunction('bs4_menuTitle', [(new Bs4()), 'menuTitle'], ['is_safe' => ['html']]),
+            new TwigFunction('bs4_table', [(new Bs4()), 'table'], ['is_safe' => ['html']])
         ];
     }
+
+    public function getFilters()
+    {
+        return [
+        ];
+    }
+
     /**
      * Initializes the runtime environment.
      *
