@@ -17,16 +17,25 @@ class Table
     use ContentOptionsTrait;
     use FormatTrait;
 
+    /** @var Map $maps * */
     private $maps;
     private $data;
     private $options;
 
-    public function __construct(array $data, array $maps = [], array $options = [])
+    public function __construct($data, array $maps = [], array $options = [])
     {
+
+        $optionsMaps = [
+            'caller' => $this
+        ];
+
+        if (isset($options['maps'])) {
+            $options['maps'] += $optionsMaps;
+        } else {
+            $options['maps'] = $optionsMaps;
+        }
+
         $options += [
-            'maps' => [
-                'caller' => $this
-            ]
         ];
 
         $this->setMaps($maps, $options['maps']);
@@ -41,7 +50,10 @@ class Table
         $this->maps = new Map($maps, $options);
     }
 
-    public function setData(array $data)
+    /**
+     * @param $data
+     */
+    public function setData($data)
     {
         $this->data = $this->maps->transformArrays($data);
     }

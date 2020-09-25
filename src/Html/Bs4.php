@@ -72,7 +72,13 @@ class Bs4
 
     }
 
-    public function table(array $data, array $maps = [], array $options = [])
+    /**
+     * @param array|\ArrayAccess $data
+     * @param array $maps
+     * @param array $options
+     * @return string
+     */
+    public function table($data, array $maps = [], array $options = [])
     {
         $options += [
             'isTableDark' => ($this->theme === self::THEME_DARK ? true : false),

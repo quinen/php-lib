@@ -3,7 +3,6 @@
 namespace QuinenLib\Map;
 
 use QuinenLib\Arrays\ContentOptionsTrait;
-use QuinenLib\Html\Tag;
 
 /**
  * Class Map
@@ -15,12 +14,19 @@ class Map
 {
     use ContentOptionsTrait;
 
+    protected $defaults = [
+        'label' => true,
+        'field' => false,
+        'format' => true,
+        'hide' => false
+    ];
+
     protected $maps;
 
     protected $options = [
         // champs par default qui doivent etres presents
         'defaults' => [],
-        // normalization
+        // normalization sous format contentOptions
         'contentOptions' => ['label', 'field'],
         // proprieté a disptacher dans les options en commun dans les champs indiqués
         'commons' => [
@@ -31,14 +37,10 @@ class Map
         // see setOptionFormat
         'format' => null,
         // caller
-        'caller' => null
-    ];
-
-    protected $defaults = [
-        'label' => true,
-        'field' => false,
-        'format' => true,
-        'hide' => false
+        'caller' => null,
+        'templater' => null,
+        // inject context in line data
+        'context' => []
     ];
 
     /**
@@ -65,7 +67,20 @@ class Map
     {
         if (isset($data[$field])) {
             return $data[$field];
+        } else if ($fields = explode('.', $field)) {
+
+            switch (count($fields)) {
+                case 2:
+                    if (isset($data[$fields[0]][$fields[1]])) {
+                        return $data[$fields[0]][$fields[1]];
+                    }
+                    return $default;
+                    die('Map::get:' . $field . ':' . json_encode($data));
+                default:
+                    return $default;
+            }
         }
+        die(\json_encode([$data, $field, $default]));
         return $default;
     }
 
@@ -79,6 +94,7 @@ class Map
         $this->setOptionLabel();
         $this->setOptionFormat();
         $this->setOptionCaller();
+        $this->setOptionTemplater();
         $this->options = $options + $this->options;
     }
 
@@ -114,6 +130,17 @@ class Map
             $caller = $this;
         }
         $this->options['caller'] = $caller;
+    }
+
+    public function setOptionTemplater($templater = null)
+    {
+        if ($templater === null) {
+            $templater = function ($template, $values) {
+                return \template($template, $values);
+            };
+        }
+
+        $this->options['templater'] = $templater;
     }
 
     public function init($maps)
@@ -193,11 +220,13 @@ class Map
     }
 
 
-    public function transformArray($data)
+    public function transformArray($row)
     {
-        $line = [];
+        $rowTransformed = [];
         foreach ($this->maps as $map) {
-            $map = \template($map, $data);
+
+            $map = $this->options['templater']($map, $row);
+
             //debug_lite($map);
             if ($map['hide']) {
                 continue;
@@ -207,7 +236,7 @@ class Map
 
             list($field, $fieldOptions) = $map['field'];
 
-            $value = $this->getValueFromField($field, $data);
+            $value = $this->getValueFromField($field, $row);
 
             // options based on a function
             if ($fieldOptions instanceof \Closure) {
@@ -217,18 +246,18 @@ class Map
             $format = $this->getFormatFromValue($value, $map['format']);
 
             if (!is_scalar($format)) {
-                $format = new Tag('pre', trim(\json_encode($format, JSON_PRETTY_PRINT), "{}[]\n"));
+                $format = \json_encode($format, JSON_PRETTY_PRINT);
             }
 
-            $line[] = [$format, $fieldOptions];
+            $rowTransformed[] = [$format, $fieldOptions];
         }
-        return $line;
+        return $rowTransformed;
     }
 
-    public function transformArrays(array $data, $options = [])
+    public function transformArrays($rows, $options = [])
     {
-        //debug_lite($data);
-        return array_map(function ($line) use ($options) {
+
+        $fn = function ($line) use ($options) {
 
             $lineTransformed = $this->transformArray($line);
             //debug_lite([$line,$lineTransformed]);
@@ -236,7 +265,25 @@ class Map
                 $options = $options($line);
             }
             return [$lineTransformed, $options];
-        }, $data);
+        };
+
+        if (is_array($rows)) {
+            return array_map($fn, $rows);
+        } else if ($rows instanceof \Traversable) {
+            return $this->mapTraversable($rows, $fn);
+        } else {
+            die(get_class($rows));
+        }
+
+    }
+
+    private function mapTraversable(\Traversable $traversable, callable $fn)
+    {
+        $r = [];
+        foreach ($traversable as $item) {
+            $r[] = $fn($item);
+        }
+        return $r;
     }
 
     private function getValueFromField($field, $data)

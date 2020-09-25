@@ -13,7 +13,6 @@ use QuinenLib\Html\Bs4;
 use Twig\Environment;
 use Twig\Extension\AbstractExtension;
 use Twig\Extension\GlobalsInterface;
-use Twig\TwigFilter;
 use Twig\TwigFunction;
 
 class Bs4Extension extends AbstractExtension implements GlobalsInterface
@@ -24,8 +23,35 @@ class Bs4Extension extends AbstractExtension implements GlobalsInterface
         return [
             new TwigFunction('bs4_badge', [(new Bs4()), 'badge'], ['is_safe' => ['html']]),
             new TwigFunction('bs4_menuTitle', [(new Bs4()), 'menuTitle'], ['is_safe' => ['html']]),
-            new TwigFunction('bs4_table', [(new Bs4()), 'table'], ['is_safe' => ['html']])
+            new TwigFunction('bs4_table', [$this, 'table'], ['is_safe' => ['html'], 'needs_environment' => true])
         ];
+    }
+
+    /**
+     * @param array|\ArrayAccess $data
+     * @param array $maps
+     * @param array $options
+     * @return string
+     */
+    public function table(Environment $env, $data, array $maps = [], array $options = [])
+    {
+        $optionsMaps = (isset($options['maps']) ? $options['maps'] : []);
+
+        $options += [
+            'context' => []
+        ];
+
+        // maps
+        $templater = new Template($env,$options['context']);
+        unset($options['context']);
+
+        $options['maps'] = $optionsMaps + [
+                'templater' => function ($template, $context) use ($templater) {
+                    return $templater->render($template, $context);
+                }
+            ];
+
+        return (new Bs4())->table($data, $maps, $options);
     }
 
     public function getFilters()
