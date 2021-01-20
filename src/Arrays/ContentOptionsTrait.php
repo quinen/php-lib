@@ -30,7 +30,7 @@ trait ContentOptionsTrait
         $contentOptions = [];
         // if isset 0 if the content is already an array ... but data shoud be an option
 
-        if (is_array($content) && (isset($content[0]) || $content[0] === null)) {
+        if (is_array($content) && (isset($content[0]) || (array_key_exists(0, $content) && $content[0] === null))) {
             $contentOptions = Hash::get($content, '1', []);
             $content = Hash::get($content, '0', $contentDefault);
         }
