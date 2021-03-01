@@ -1,0 +1,7 @@
+<phpunit bootstrap="tests/bootstrap.php">
+    <testsuites>
+        <testsuite name="quinen-php-lib">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

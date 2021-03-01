@@ -19,8 +19,8 @@ class Git
 
     public function __construct()
     {
-        if(!$this->getPath()){
-            throw new \Exception('no '.self::DIR.' found');
+        if (!$this->getPath()) {
+            throw new \Exception('no ' . self::DIR . ' found');
         }
     }
 
@@ -63,9 +63,13 @@ class Git
         }
 
         if (!isset($this->hashes[$branch])) {
-            if ($hash = file_get_contents(implode(DIRECTORY_SEPARATOR, [$this->getPath(), 'refs', 'heads', $branch]))) {
-                $this->hashes[$branch] = [trim($hash), trim(substr($hash, 0, 7))];
+            $path = implode(DIRECTORY_SEPARATOR, [$this->getPath(), 'refs', 'heads', $branch]);
+            if (file_exists($path)) {
+                $hash = file_get_contents($path);
+            } else {
+                $hash = shell_exec('git rev-parse origin/'.$branch);
             }
+            $this->hashes[$branch] = [trim($hash), trim(substr($hash, 0, 7))];
         }
 
         return $this->hashes[$branch][intval($isShort)];

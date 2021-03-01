@@ -16,13 +16,22 @@
     "cakephp/utility": "3.*",
     "psr/container": "^1.0"
   },
+  "require-dev": {
+    "phpunit/phpunit": "^9.5"
+  },
   "autoload": {
     "psr-4": {
-      "QuinenLib\\": "./src"
+      "QuinenLib\\": "./src",
+      "QuinenLib\\Test\\": "./tests"
     },
     "files": [
       "src/functions.php"
     ]
+  },
+  "scripts": {
+    "test": "phpunit",
+    "test-debug": "phpunit --debug",
+    "test-coverage": "phpunit --coverage-html coverage"
   },
   "config": {
     "sort-packages": true,
