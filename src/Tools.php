@@ -81,4 +81,56 @@ class Tools
         }
         return sprintf("%.{$decimals}f", $bytes / (1024 ** $factor)) . ' ' . @$sz[$factor - 1] . 'o';
     }
+
+    public static function errorHandler($errno = -1, $errstr = '', $errfile = '', $errline = -1, array $errcontext = [])
+    {
+        $endsWith = function ($haystack, $needle) {
+            $length = strlen($needle);
+            return $length > 0 ? substr($haystack, -$length) === $needle : true;
+        };
+
+        $startsWith = function ($haystack, $needle) {
+            return strpos($haystack, $needle) === 0;
+        };
+
+        unset($errcontext['dbhost']);
+        unset($errcontext['dblogin']);
+        unset($errcontext['dbpassword']);
+        unset($errcontext['dbname']);
+
+        $errors = ['error', 'warning', 'parse', 'notice', 'core_error', 'core_warning', 'compile_error', 'compile_warning',
+            'user_error', 'user_warning', 'user_notice', 'strict', 'recoverable_error', 'deprecated', 'user_deprecated', 'all'];
+        $errorCode = $errors[log($errno) / log(2)];
+
+        //Undefined index
+        $colors = [
+            'error' => 'red',
+            'warning' => 'orange',
+            'notice' => 'blue'
+        ];
+        $errorColor = 'white';
+        foreach ($colors as $errorType => $color) {
+            if ($endsWith($errorCode, $errorType)) {
+                $errorColor = $color;
+                break;
+            }
+        }
+
+        $e = new \Exception();
+        $exception = $e->getTraceAsString();
+
+        $return = '<div style="background: black ;color: white;border-radius: 1em;margin: 1em;padding: 1em">
+<div style="display: flex;justify-content:space-between;font-weight: bolder;background:' . $errorColor . ';padding: 1em">
+<span style="">' . $errfile . ' : ' . $errline . '</span>
+<span style="text-align:right">' . $errorCode . ' : ' . $errstr . '</span>
+</div>
+
+<div>
+<pre>' . print_r($errcontext, true) . '</pre>
+<pre>' .$exception . '</pre>
+</div>
+
+</div>';
+        echo $return;
+    }
 }

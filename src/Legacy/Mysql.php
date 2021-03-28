@@ -38,12 +38,12 @@ class Mysql
         return true;
     }
 
-    public static function query($query)
+    public static function query($query, $input_parameters = [])
     {
         $db = self::getInstance()->getDb();
         try {
             $res = $db->prepare($query);
-            self::getInstance()->executed = false;
+            $res->execute($input_parameters);
         } catch (\PDOException $e) {
             $res = false;
             if ($e->getCode() === '42S02') {
@@ -59,24 +59,20 @@ class Mysql
 
     public static function result(\PDOStatement $stmt, $row, $field = 0)
     {
-        if (!$stmt->execute()) {
-            debug_lite($row . '.' . $field);
-            debug_lite(debug_backtrace());
-        }
-
         $all = $stmt->fetchAll();
+        $stmt->execute();
         $res = Hash::get($all, $row . '.' . $field);
 
         if ($res === null) {
-            debug_lite([$all, $row . '.' . $field]);
-            debug_lite(debug_backtrace());
+            //debug_lite([$all, $row . '.' . $field]);
+            //debug_lite(debug_backtrace());
         } else {
             //debug_lite($res);
         }
         return $res;
     }
 
-    public static function close($db = null)
+    public static function close(\PDO $db = null)
     {
         if ($db === null) {
             $db = self::getInstance()->getDb();
@@ -86,21 +82,20 @@ class Mysql
 
     public static function numRows(\PDOStatement $stmt)
     {
-        if (!self::getInstance()->executed) {
-            $stmt->execute();
-            self::getInstance()->executed = true;
-        }
         return $stmt->rowCount();
     }
 
     public static function fetchArray(\PDOStatement $stmt)
     {
-        if (!self::getInstance()->executed) {
-            $stmt->execute();
-            self::getInstance()->executed = true;
-        }
-
         return $stmt->fetch(\PDO::FETCH_BOTH);
+    }
+
+    public static function insertId(\PDO $db = null)
+    {
+        if ($db === null) {
+            $db = self::getInstance()->getDb();
+        }
+        return $db->lastInsertId();
     }
 
 
